@@ -15,8 +15,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var textField: UITextField!
     @IBOutlet weak var sentimentLabel: UILabel!
     
-    static let TWITTER_CONSUMER_KEY = "TWITTER_CONSUMER_KEY"
-    static let TWITTER_CONSUMER_SECRET = "TWITTER_CONSUMER_SECRET"
+    static let secrets = parseSecrets()
+    static let TWITTER_CONSUMER_KEY = secrets.api_key
+    static let TWITTER_CONSUMER_SECRET = secrets.api_secret
     
     // Instantiation using Twitter's OAuth Consumer Key and secret
     let swifter = Swifter(consumerKey: TWITTER_CONSUMER_KEY, consumerSecret: TWITTER_CONSUMER_SECRET)
@@ -39,3 +40,19 @@ class ViewController: UIViewController {
     
 }
 
+// https://stackoverflow.com/questions/24045570/how-do-i-get-a-plist-as-a-dictionary-in-swift
+struct Secrets: Decodable {
+    private enum CodingKeys: String, CodingKey {
+        case api_key, api_secret
+    }
+
+    let api_key: String
+    let api_secret: String
+}
+
+func parseSecrets() -> Secrets {
+    let url = Bundle.main.url(forResource: "Secrets", withExtension: "plist")!
+    let data = try! Data(contentsOf: url)
+    let decoder = PropertyListDecoder()
+    return try! decoder.decode(Secrets.self, from: data)
+}
