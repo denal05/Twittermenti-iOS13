@@ -28,30 +28,53 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        //        let prediction = try! sentimentClassifier.prediction(text: "@Apple is terrible")
-        //        print(#function + ": Prediction is \(prediction.label)")
-        
-        swifter.searchTweet(using: "@Apple", lang: "en", count: 100, tweetMode: .extended) { (results, metadata) in
-            //print(#function + ": \(results)")
-            var tweets = [String]()
-            for i in 0..<100 {
-                if let tweet = results[i]["full_text"].string {
-                    tweets.append(tweet)
-                }
-                print(#function + ": Tweets> \(tweets)")
-            }
-        } failure: { (error) in
-            print(#function + ": The Twitter API request returned the following error: \(error)")
-        }
-        
     }
     
     @IBAction func predictPressed(_ sender: Any) {
-        
-        
+        if let searchText = textField.text {
+            swifter.searchTweet(using: searchText, lang: "en", count: 100, tweetMode: .extended) { (results, metadata) in
+                var tweets = [TweetSentimentClassifierInput]()
+                
+                for i in 0..<100 {
+                    if let tweet = results[i]["full_text"].string {
+                        let tweetForClassification = TweetSentimentClassifierInput(text: tweet)
+                        tweets.append(tweetForClassification)
+                    }
+                }
+                
+                do {
+                    let predictions = try self.sentimentClassifier.predictions(inputs: tweets)
+                    var sentimentScore = 0
+                    for prediction in predictions {
+                        if prediction.label == "Pos" { sentimentScore += 1 }
+                        else if prediction.label == "Neg" { sentimentScore -= 1 }
+                    }
+                    
+                    print(#function + ": sentimentScore is \(sentimentScore)")
+                    
+                    if sentimentScore > 20 {
+                        self.sentimentLabel.text = "😍"
+                    } else if sentimentScore > 10 {
+                        self.sentimentLabel.text = "😀"
+                    } else if sentimentScore > 0 {
+                        self.sentimentLabel.text = "🙂"
+                    } else if sentimentScore == 0 {
+                        self.sentimentLabel.text = "😐"
+                    } else if sentimentScore > -10 {
+                        self.sentimentLabel.text = "🙁"
+                    } else if sentimentScore > -20 {
+                        self.sentimentLabel.text = "😡"
+                    } else {
+                        self.sentimentLabel.text = "🤮"
+                    }
+                } catch {
+                    print(#function + ": There was an error with making a prediction, \(error)")
+                }
+            } failure: { (error) in
+                print(#function + ": The Twitter API request returned the following error: \(error)")
+            }
+        }
     }
-    
 }
 
 // https://stackoverflow.com/questions/24045570/how-do-i-get-a-plist-as-a-dictionary-in-swift
