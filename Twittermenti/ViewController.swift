@@ -13,6 +13,7 @@ import CoreML
 
 class ViewController: UIViewController {
     
+    var debug: Bool = true
     @IBOutlet weak var backgroundView: UIView!
     @IBOutlet weak var textField: UITextField!
     @IBOutlet weak var sentimentLabel: UILabel!
@@ -64,7 +65,9 @@ class ViewController: UIViewController {
                 else if prediction.label == "Neg" { sentimentScore -= 1 }
             }
             
-            print(#function + ": sentimentScore is \(sentimentScore)")
+            if debug {
+                print(#function + ": sentimentScore for \(textField.text) is \(sentimentScore)")
+            }
             
             updateUI(with: sentimentScore)
         } catch {
